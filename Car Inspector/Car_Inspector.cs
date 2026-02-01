@@ -1247,7 +1247,7 @@ namespace Car_Inspector
             GUILayout.BeginHorizontal();
             try
             {
-                GUILayout.Label(" Oil Dirtness", GUILayout.Width(120));
+                GUILayout.Label(" Oil Dirtiness", GUILayout.Width(120));
                 var oilpercent = GetPercentLiquid(oilContamination.Value, 0f, contaminationWarning);
                 var valueFormated = $"{oilContamination.Value.ToString("0.00")}%";
                 float valueWidth = 80f;
