@@ -58,8 +58,10 @@ namespace Car_Inspector
         private List<PartInfoFloat> carTunesValues = new List<PartInfoFloat>();
         private List<PartInfoBool> damagedParts = new List<PartInfoBool>();
         private List<PartInfoFloat> wheelsTune = new List<PartInfoFloat>();
+        private List<PartInfoFloat> ratios = new List<PartInfoFloat>();
         private List<ValvesAdjs> valvesList = new List<ValvesAdjs>();
         GUIStyle percentStyle;
+        GUIStyle center;
         GUIStyle headerStyle;
         Transform crankPosition;
         Transform camPosition;
@@ -327,6 +329,8 @@ namespace Car_Inspector
         {
             if (!show) return;
 
+            center = new GUIStyle(GUI.skin.label);
+            center.alignment = TextAnchor.MiddleCenter;
             percentStyle = new GUIStyle(GUI.skin.label);
             percentStyle.alignment = TextAnchor.MiddleRight;
             percentStyle.fontSize = 14;
@@ -371,17 +375,7 @@ namespace Car_Inspector
         int times = 0;
         private void Mod_FixedUpdate()
         {
-            if (!show) return;
 
-            if (times >=240)
-            {
-                UpdatePartsEntities();
-                times = 0;
-            }
-            else
-            {
-                times++;
-            }
         }
         private void initValveTunes()
         {
@@ -476,6 +470,15 @@ namespace Car_Inspector
             carTunesValues.Add(InitPartValue("Dist. Angle", "VINP_Distributor", "SparkAngle"));
             carTunesValues.Add(InitPartValue("Timing Cam", "CORRIS/Simulation/Systems/EngineTiming", "RotationCam", "TimingData"));
             carTunesValues.Add(InitPartValue("Timing Crank", "CORRIS/Simulation/Systems/EngineTiming", "RotationCrank", "TimingData"));
+
+            ratios.Clear();
+            ratios.Add(InitPartValue("Rear Axel Final","VINP_RearAxle", "FinalGear"));
+            ratios.Add(InitPartValue("Gear #1", "VINP_Gearbox", "Ratio1"));
+            ratios.Add(InitPartValue("Gear #2", "VINP_Gearbox", "Ratio2"));
+            ratios.Add(InitPartValue("Gear #3", "VINP_Gearbox", "Ratio3"));
+            ratios.Add(InitPartValue("Gear #4", "VINP_Gearbox", "Ratio4"));
+            ratios.Add(InitPartValue("Gear #5", "VINP_Gearbox", "Ratio5"));
+            ratios.Add(InitPartValue("Reverse", "VINP_Gearbox", "RatioR"));
 
             wheelsTune.Clear();
             wheelsTune.Add(InitPartValue("Wheel Left", "VINP_SteeringRack", VaribleName:"TieRodLeftSetting"));
@@ -1077,6 +1080,28 @@ namespace Car_Inspector
                 GUILayout.EndHorizontal();
 
             }
+            GUILayout.Label("Gearbox and Rear Axle ratios:", headerStyle);
+            GUILayout.Space(5);
+            foreach (var ratio in ratios)
+            {
+                GUILayout.BeginHorizontal();
+                try
+                {
+
+                    GUILayout.Label(" " + ratio.Name, GUILayout.Width(120));
+                    var valueFormated = ratio.PartValue.Value.ToString("0.00");
+                    float valueWidth = 80f;
+                    DrawRevealValue(ratio.Name, valueFormated, percentStyle, valueWidth, isValuesHidden,original);
+
+                }
+                catch
+                {
+                    if (_showDebugMSG.GetValue())
+                        ModConsole.Log($"Build GUI Error. {ratio.Name}. Skip this line");
+                }
+                GUILayout.EndHorizontal();
+
+            }
             GUILayout.EndVertical();
 
             // Column 4
@@ -1324,6 +1349,15 @@ namespace Car_Inspector
                     ModConsole.Log($"Build GUI Error. Build GUI Error. Skip this line");
             }
             GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Part is installed but not shown?",center, GUILayout.Width(200));
+            GUILayout.EndHorizontal();
+
+            if (GUILayout.Button("Update entities!",GUILayout.Width(150)))
+            {
+                UpdatePartsEntities();
+            }
 
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
