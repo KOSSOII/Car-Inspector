@@ -14,7 +14,7 @@ namespace Car_Inspector
         public override string ID => "Car_Inspector"; // Your (unique) mod ID 
         public override string Name => "Car Inspector"; // Your mod name
         public override string Author => "Izuko"; // Name of the Author (your name)
-        public override string Version => "1.4.1"; // Version
+        public override string Version => "1.5"; // Version
         public override string Description => "Show Corris parts wear and adjustments"; // Short description of your mod 
         public override Game SupportedGames => Game.MyWinterCar;
         public class PartInfoFloat
@@ -356,7 +356,7 @@ namespace Car_Inspector
             );
 
 
-            windowRect = GUI.Window(1234, windowRect, DisplayReport, "Car Inspector 1.4");
+            windowRect = GUI.Window(1234, windowRect, DisplayReport, "Car Inspector 1.5");
 
             GUI.matrix = oldMatrix;
 
