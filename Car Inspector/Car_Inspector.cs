@@ -14,7 +14,7 @@ namespace Car_Inspector
         public override string ID => "Car_Inspector"; // Your (unique) mod ID 
         public override string Name => "Car Inspector"; // Your mod name
         public override string Author => "Izuko"; // Name of the Author (your name)
-        public override string Version => "1.5.1"; // Version
+        public override string Version => "1.5.2"; // Version
         public override string Description => "Show Corris parts wear and adjustments"; // Short description of your mod 
         public override Game SupportedGames => Game.MyWinterCar;
         public class PartInfoFloat
@@ -340,7 +340,7 @@ namespace Car_Inspector
             );
 
 
-            windowRect = GUI.Window(1234, windowRect, DisplayReport, "Car Inspector 1.5.1");
+            windowRect = GUI.Window(1234, windowRect, DisplayReport, "Car Inspector 1.5.2");
 
             GUI.matrix = oldMatrix;
 
@@ -364,7 +364,7 @@ namespace Car_Inspector
         private void initValveTunes()
         {
             valvesList.Clear();
-            var AdjustmentsGameObj = GameObject.Find("CORRIS").transform.Find("MotorPivot/MassCenter/Block/VINP_Block/Engine Block(VINX0)/VINP_Cylinderhead/Cylinder Head(VINX0)/ValveAdjustment/Masked");
+            var AdjustmentsGameObj = GameObject.Find("ValveAdjustment");
             if (AdjustmentsGameObj != null) {
                 var valves = AdjustmentsGameObj.GetComponentsInChildren<PlayMakerFSM>(true).Where(x => x.FsmName == "Screw").ToList();
                 if (valves.Count > 0)
@@ -442,9 +442,7 @@ namespace Car_Inspector
                         }
                     }
                 }
-            } 
-            
-
+            }
         }
         private void InitCarTunes()
         {
@@ -1317,15 +1315,17 @@ namespace Car_Inspector
             }
             GUILayout.EndHorizontal();
 
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Part is installed but not shown?",center, GUILayout.Width(200));
-            GUILayout.EndHorizontal();
-
-            if (GUILayout.Button("Update entities!",GUILayout.Width(150)))
+            if(_showDebugMSG.GetValue())
             {
-                UpdatePartsEntities();
-            }
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Part is installed but not shown?", center, GUILayout.Width(200));
+                GUILayout.EndHorizontal();
 
+                if (GUILayout.Button("Update entities!", GUILayout.Width(150)))
+                {
+                    UpdatePartsEntities();
+                }
+            }
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
 
