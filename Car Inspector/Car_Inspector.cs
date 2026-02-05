@@ -14,7 +14,7 @@ namespace Car_Inspector
         public override string ID => "Car_Inspector"; // Your (unique) mod ID 
         public override string Name => "Car Inspector"; // Your mod name
         public override string Author => "Izuko"; // Name of the Author (your name)
-        public override string Version => "1.5"; // Version
+        public override string Version => "1.5.1"; // Version
         public override string Description => "Show Corris parts wear and adjustments"; // Short description of your mod 
         public override Game SupportedGames => Game.MyWinterCar;
         public class PartInfoFloat
@@ -77,8 +77,7 @@ namespace Car_Inspector
         FsmFloat oilfilterDirt;
         FsmVector3 WheelFLRotation;
         FsmVector3 WheelFRRotation;
-        FsmVector3 WheelRLRotation;
-        FsmVector3 WheelRRRotation;
+        Transform RearAxelBend;
         FsmFloat ATFLevel;
         FsmFloat AFTMax;
         FsmFloat coolantMax;
@@ -294,27 +293,12 @@ namespace Car_Inspector
                 }
             }
 
-            //Bend for Read removed from game? 01.02.2026
 
-            //var wheelRR = GameObject.Find("WHEELc_RL");
-            //if (wheelRR != null)
-            //{
-            //    var wheelRRDataComp = wheelRR.GetComponents<PlayMakerFSM>().Where(x => x.FsmName == "Data").First();
-            //    if (wheelRRDataComp != null)
-            //    {
-            //        WheelRRRotation = wheelRRDataComp.GetVariable<FsmVector3>("Rotation");
-            //    }
-            //}
-
-            //var wheelRL = GameObject.Find("WHEELc_RL");
-            //if (wheelRL != null)
-            //{
-            //    var wheelRLDataComp = wheelRL.GetComponents<PlayMakerFSM>().Where(x => x.FsmName == "Data").First();
-            //    if (wheelRLDataComp != null)
-            //    {
-            //        WheelRLRotation = wheelRLDataComp.GetVariable<FsmVector3>("Rotation");
-            //    }
-            //}
+            var axelRearDamagePivot = GameObject.Find("AxleDamagePivot");
+            if (axelRearDamagePivot != null)
+            {
+                RearAxelBend = axelRearDamagePivot.transform;
+            }
 
             InitCarTunes();
             InitLiq();
@@ -356,7 +340,7 @@ namespace Car_Inspector
             );
 
 
-            windowRect = GUI.Window(1234, windowRect, DisplayReport, "Car Inspector 1.5");
+            windowRect = GUI.Window(1234, windowRect, DisplayReport, "Car Inspector 1.5.1");
 
             GUI.matrix = oldMatrix;
 
@@ -974,7 +958,7 @@ namespace Car_Inspector
             try
             {
                 GUILayout.Label($" {partName}", GUILayout.Width(100));
-                var valueFormated = $"{WheelFLRotation.Value.x},{WheelFLRotation.Value.y},{WheelFLRotation.Value.z}";
+                var valueFormated = $"{WheelFLRotation.Value.x.ToString("0.#####")},{WheelFLRotation.Value.y.ToString("0.#####")},{WheelFLRotation.Value.z.ToString("0.#####")}";
                 float valueWidth = 100f;
                 DrawRevealValue(partName, valueFormated, percentStyle, valueWidth, isValuesHidden, original);
             }
@@ -989,7 +973,7 @@ namespace Car_Inspector
             try
             {
                 GUILayout.Label($" {partName}", GUILayout.Width(100));
-                var valueFormated = $"{WheelFRRotation.Value.x},{WheelFRRotation.Value.y},{WheelFRRotation.Value.z}";
+                var valueFormated = $"{WheelFRRotation.Value.x.ToString("0.#####")},{WheelFRRotation.Value.y.ToString("0.#####")},{WheelFRRotation.Value.z.ToString("0.#####")}";
                 float valueWidth = 100f;
                 DrawRevealValue(partName, valueFormated, percentStyle, valueWidth, isValuesHidden, original);
             }
@@ -1000,38 +984,21 @@ namespace Car_Inspector
             }
             GUILayout.EndHorizontal();
 
-            //Bend for Read removed from game? 01.02.2026
-
-            //GUILayout.BeginHorizontal();
-            //partName = "Bend Wheel RL";
-            //try
-            //{
-            //    GUILayout.Label($" {partName}", GUILayout.Width(100));
-            //    var valueFormated = $"{WheelRLRotation.Value.x},{WheelRLRotation.Value.y},{WheelRLRotation.Value.z}";
-            //    float valueWidth = 100f;
-            //    DrawRevealValue($"{partName}", valueFormated, percentStyle, valueWidth, isValuesHidden, original);
-            //}
-            //catch
-            //{
-            //    if (_showDebugMSG.GetValue())
-            //        ModConsole.Log($"Build GUI Error. {partName}. Skip this line");
-            //}
-            //GUILayout.EndHorizontal();
-            //GUILayout.BeginHorizontal();
-            //partName = "Bend Wheel RR";
-            //try
-            //{
-            //    GUILayout.Label($" {partName}", GUILayout.Width(100));
-            //    var valueFormated = $"{WheelRRRotation.Value.x},{WheelRRRotation.Value.y},{WheelRRRotation.Value.z}";
-            //    float valueWidth = 100f;
-            //    DrawRevealValue(partName, valueFormated, percentStyle, valueWidth, isValuesHidden, original);
-            //}
-            //catch
-            //{
-            //    if (_showDebugMSG.GetValue())
-            //        ModConsole.Log($"Build GUI Error. {partName}. Skip this line");
-            //}
-            //GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            partName = "Bend Rear Axle";
+            try
+            {
+                GUILayout.Label($" {partName}", GUILayout.Width(100));
+                var valueFormated = $"{RearAxelBend.localRotation.eulerAngles.x.ToString("0.#####")},{RearAxelBend.localRotation.eulerAngles.y.ToString("0.#####")},{RearAxelBend.localRotation.eulerAngles.z.ToString("0.#####")}";
+                float valueWidth = 100f;
+                DrawRevealValue(partName, valueFormated, percentStyle, valueWidth, isValuesHidden, original);
+            }
+            catch
+            {
+                if (_showDebugMSG.GetValue())
+                    ModConsole.Log($"Build GUI Error. {partName}. Skip this line");
+            }
+            GUILayout.EndHorizontal();
 
             GUILayout.Label("Wheels Alignment", headerStyle);
             GUILayout.Space(5);
@@ -1080,7 +1047,7 @@ namespace Car_Inspector
                 GUILayout.EndHorizontal();
 
             }
-            GUILayout.Label("Gearbox and Rear Axle ratios:", headerStyle);
+            GUILayout.Label("Gearbox & Rear Axle ratios:", headerStyle);
             GUILayout.Space(5);
             foreach (var ratio in ratios)
             {
