@@ -14,7 +14,7 @@ namespace Car_Inspector
         public override string ID => "Car_Inspector"; // Your (unique) mod ID 
         public override string Name => "Car Inspector"; // Your mod name
         public override string Author => "Izuko"; // Name of the Author (your name)
-        public override string Version => "1.5.2"; // Version
+        public override string Version => "1.5.3"; // Version
         public override string Description => "Show Corris parts wear and adjustments"; // Short description of your mod 
         public override Game SupportedGames => Game.MyWinterCar;
         public class PartInfoFloat
@@ -85,6 +85,8 @@ namespace Car_Inspector
         FsmFloat OilPressure;
         FsmFloat CoolantTemp;
         FsmFloat EngineTemp;
+        FsmFloat FuelCellFuelCurrent;
+        FsmFloat FuelCellFuelMax;
 
         SettingsSlider _windowScale;
         SettingsCheckBox _manulScale;
@@ -340,7 +342,7 @@ namespace Car_Inspector
             );
 
 
-            windowRect = GUI.Window(1234, windowRect, DisplayReport, "Car Inspector 1.5.2");
+            windowRect = GUI.Window(1234, windowRect, DisplayReport, "Car Inspector 1.5.3");
 
             GUI.matrix = oldMatrix;
 
@@ -562,6 +564,7 @@ namespace Car_Inspector
                     BatteryMax = batteryComp.GetVariable<FsmFloat>("ChargeMax");
                 }
             }
+
             var fueltank = GameObject.Find("VINP_Fueltank");
             if (fueltank != null)
             {
@@ -572,6 +575,18 @@ namespace Car_Inspector
                     fuelMax = fueldataComp.GetVariable<FsmFloat>("MaxCapacity");
                 }
             }
+
+            var fuelcell = GameObject.Find("VINP_FuelCell");
+            if (fuelcell != null)
+            {
+                var fuelcelldataComp = fuelcell.GetComponents<PlayMakerFSM>().Where(x => x.FsmName == "Data").First();
+                if (fuelcelldataComp != null)
+                {
+                    FuelCellFuelCurrent = fuelcelldataComp.GetVariable<FsmFloat>("FuelLevel");
+                    FuelCellFuelMax = fuelcelldataComp.GetVariable<FsmFloat>("MaxCapacity");
+                }
+            }
+
             var automaticGearbox = GameObject.Find("VINP_Gearbox");
             if(automaticGearbox != null)
             {
@@ -1291,6 +1306,22 @@ namespace Car_Inspector
                 var valueFormated = $"{fuelCurrent.Value.ToString("0.00")}L - {fuelpercent.ToString("0.0")}%";
                 float valueWidth = 120f;
                 DrawRevealValue("Fuel Level", valueFormated, percentStyle, valueWidth, isValuesHidden, GetColorByPercent(fuelpercent));
+            }
+            catch
+            {
+                if (_showDebugMSG.GetValue())
+                    ModConsole.Log($"Build GUI Error. Build GUI Error. Skip this line");
+            }
+            GUILayout.EndHorizontal();
+            //Fuel Cell LVL
+            GUILayout.BeginHorizontal();
+            try
+            {
+                GUILayout.Label(" Fuel Cell", GUILayout.Width(80));
+                var fuelcellpercent = GetPercentLiquid(FuelCellFuelCurrent.Value, 0f, FuelCellFuelMax.Value);
+                var valueFormated = $"{FuelCellFuelCurrent.Value.ToString("0.00")}L - {fuelcellpercent.ToString("0.0")}%";
+                float valueWidth = 120f;
+                DrawRevealValue("Fuel Level", valueFormated, percentStyle, valueWidth, isValuesHidden, GetColorByPercent(fuelcellpercent));
             }
             catch
             {
