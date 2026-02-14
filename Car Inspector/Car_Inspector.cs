@@ -14,7 +14,7 @@ namespace Car_Inspector
         public override string ID => "Car_Inspector"; // Your (unique) mod ID 
         public override string Name => "Car Inspector"; // Your mod name
         public override string Author => "Izuko"; // Name of the Author (your name)
-        public override string Version => "1.5.3"; // Version
+        public override string Version => "1.5.4"; // Version
         public override string Description => "Show Corris parts wear and adjustments"; // Short description of your mod 
         public override Game SupportedGames => Game.MyWinterCar;
         public class PartInfoFloat
@@ -61,6 +61,7 @@ namespace Car_Inspector
         private List<PartInfoFloat> ratios = new List<PartInfoFloat>();
         private List<ValvesAdjs> valvesList = new List<ValvesAdjs>();
         GUIStyle percentStyle;
+        GUIStyle leftStyle;
         GUIStyle center;
         GUIStyle headerStyle;
         Transform crankPosition;
@@ -87,6 +88,12 @@ namespace Car_Inspector
         FsmFloat EngineTemp;
         FsmFloat FuelCellFuelCurrent;
         FsmFloat FuelCellFuelMax;
+        FsmGameObject CarbActivePart;
+
+        FsmFloat FourBarrelAdjOne;
+        FsmFloat FourBarrelAdjTwo;
+        FsmFloat FourBarrelAdjThree;
+        FsmFloat FourBarrelAdjFour;
 
         SettingsSlider _windowScale;
         SettingsCheckBox _manulScale;
@@ -94,7 +101,7 @@ namespace Car_Inspector
         SettingsCheckBox _showDebugMSG;
         SettingsKeybind keybind;
         bool show;
-
+        bool FourBarrelInit= false;
         Rect windowRect = new Rect(200, 200, 950, 900);
         static readonly Vector2 REFERENCE_RES = new Vector2(1920f, 1080f);
         public override void ModSetup()
@@ -224,6 +231,29 @@ namespace Car_Inspector
                 _windowScale.SetVisibility(false);
             }
         }
+        private void Get4BarrelAdj()
+        {
+            if (CarbActivePart != null)
+            {
+                var adjComp = CarbActivePart.Value.gameObject.GetComponents<PlayMakerFSM>().Where(x => x.FsmName == "Adjustment").FirstOrDefault();
+                if (adjComp != null)
+                {
+                    FourBarrelAdjOne = adjComp.GetVariable<FsmFloat>("Adjust1");
+                    FourBarrelAdjTwo = adjComp.GetVariable<FsmFloat>("Adjust2");
+                    FourBarrelAdjThree = adjComp.GetVariable<FsmFloat>("Adjust3");
+                    FourBarrelAdjFour = adjComp.GetVariable<FsmFloat>("Adjust4");
+                }
+                FourBarrelInit = true;
+            }
+        }
+        private void Reset4BarrelAdj()
+        {
+            FourBarrelAdjOne = null;
+            FourBarrelAdjTwo = null;
+            FourBarrelAdjThree = null;
+            FourBarrelAdjFour = null;
+            FourBarrelInit = false;
+        }
         private void UpdatePartsEntities()
         {
             //Rockers
@@ -318,6 +348,8 @@ namespace Car_Inspector
             center = new GUIStyle(GUI.skin.label);
             center.alignment = TextAnchor.MiddleCenter;
             percentStyle = new GUIStyle(GUI.skin.label);
+            leftStyle = new GUIStyle(GUI.skin.label);
+            leftStyle.alignment = TextAnchor.MiddleLeft;
             percentStyle.alignment = TextAnchor.MiddleRight;
             percentStyle.fontSize = 14;
             headerStyle = new GUIStyle(GUI.skin.label);
@@ -342,7 +374,7 @@ namespace Car_Inspector
             );
 
 
-            windowRect = GUI.Window(1234, windowRect, DisplayReport, "Car Inspector 1.5.3");
+            windowRect = GUI.Window(1234, windowRect, DisplayReport, "Car Inspector 1.5.4");
 
             GUI.matrix = oldMatrix;
 
@@ -451,6 +483,19 @@ namespace Car_Inspector
             initValveTunes();
             carTunesValues.Clear();
             carTunesValues.Add(InitPartValue("Carb. AF", "VINP_Carburettor", "SettingMixture"));
+            try
+            {
+                CarbActivePart = GameObject.Find("VINP_Carburettor").GetComponents<PlayMakerFSM>().Where(x => x.FsmName == "Data").First().GetVariable<FsmGameObject>("ActivePart");
+                if (CarbActivePart.Value.name == "4 Barrell Racing Carb(VINXX)")
+                {
+                    Get4BarrelAdj();
+                }
+                
+            }
+            catch {
+                if (_showDebugMSG.GetValue())
+                    ModConsole.Log($"Carb Active Part Init Fail! Skip.");
+            }
             carTunesValues.Add(InitPartValue("Dist. Angle", "VINP_Distributor", "SparkAngle"));
             carTunesValues.Add(InitPartValue("Timing Cam", "CORRIS/Simulation/Systems/EngineTiming", "RotationCam", "TimingData"));
             carTunesValues.Add(InitPartValue("Timing Crank", "CORRIS/Simulation/Systems/EngineTiming", "RotationCrank", "TimingData"));
@@ -937,6 +982,17 @@ namespace Car_Inspector
                 }
                 GUILayout.EndHorizontal();
             }
+            if (_showDebugMSG.GetValue())
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Part is installed but not shown?", center, GUILayout.Width(200));
+                GUILayout.EndHorizontal();
+
+                if (GUILayout.Button("Update entities!", GUILayout.Width(150)))
+                {
+                    UpdatePartsEntities();
+                }
+            }
             GUILayout.EndVertical();
 
             // Column 3
@@ -1088,6 +1144,45 @@ namespace Car_Inspector
             GUILayout.BeginVertical(GUILayout.Width(235));
             GUILayout.Label("Car tune", headerStyle);
             GUILayout.Space(5);
+            try
+            {
+                    if (CarbActivePart.Value != null && CarbActivePart.Value.name == "4 Barrell Racing Carb(VINXX)")
+                    {
+                        if (!FourBarrelInit)
+                        {
+                            Get4BarrelAdj();
+                        }
+
+                        GUILayout.Label("Barrels I - IV:",center, GUILayout.Width(235));
+                        var value1 = FourBarrelAdjOne.Value;
+                        var value2 = FourBarrelAdjTwo.Value;
+                        var value3 = FourBarrelAdjThree.Value;
+                        var value4 = FourBarrelAdjFour.Value;
+                        GUILayout.BeginHorizontal();
+                        DrawRevealValue("Barrel #1", $" I - {value1.ToString("0.000")}", leftStyle, 100, isValuesHidden, original);
+                        DrawRevealValue("Barrel #2", $"II - {value2.ToString("0.000")}", percentStyle, 100, isValuesHidden, original);
+                        GUILayout.EndHorizontal();
+                        GUILayout.BeginHorizontal();
+                        DrawRevealValue("Barrel #3", $" III - {value3.ToString("0.000")}", leftStyle, 100, isValuesHidden, original);
+                        DrawRevealValue("Barrel #4", $"IV - {value4.ToString("0.000")}", percentStyle, 100, isValuesHidden, original);
+                        GUILayout.EndHorizontal();
+
+                    }
+                    else
+                    {
+                        if (FourBarrelInit)
+                        {
+                            if (_showDebugMSG.GetValue())
+                                ModConsole.Log($"Reset 4 barrels values");
+                            Reset4BarrelAdj();
+                        }
+                    } 
+            }
+            catch
+            {
+                if (_showDebugMSG.GetValue())
+                    ModConsole.Log($"Build GUI Error. 4 barrel carb. Skip this line");
+            }
             foreach (var part in carTunesValues)
             {
                 GUILayout.BeginHorizontal();
@@ -1346,17 +1441,6 @@ namespace Car_Inspector
             }
             GUILayout.EndHorizontal();
 
-            if(_showDebugMSG.GetValue())
-            {
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("Part is installed but not shown?", center, GUILayout.Width(200));
-                GUILayout.EndHorizontal();
-
-                if (GUILayout.Button("Update entities!", GUILayout.Width(150)))
-                {
-                    UpdatePartsEntities();
-                }
-            }
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
 
